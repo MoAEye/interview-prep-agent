@@ -21,8 +21,8 @@ export default function InterviewReport({ answers, onRetry, onRetryWeak, onStart
       await supabase.from("interview_sessions").insert({
         user_id: user.id,
         score: gradeData.overall_score || 0,
-        stars: gradeData.stars || 0,
-        job_title: gradeData.job_title || "Interview",
+        stars: gradeData.star_rating || gradeData.stars || 0,
+        job_title: gradeData.job_title || gradeData.role || "Interview",
         answers: answersData,
       });
     } catch (err) {
