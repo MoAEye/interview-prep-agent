@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "vite",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,8 +12,26 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.38.1",
+    "@supabase/auth-ui-react": "^0.4.7",
+    "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.98.0",
+    "@tailwindcss/postcss": "^4.2.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "elevenlabs": "^1.59.0",
+    "express": "^5.2.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.4",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
+    "vite": "^7.3.1"
   }
 }
