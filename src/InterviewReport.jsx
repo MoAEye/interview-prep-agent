@@ -79,7 +79,7 @@ export default function InterviewReport({ answers, onRetry, onRetryWeak, onStart
     hasGradedRef.current = true;
     const grade = async () => {
       try {
-        const res = await fetch("http://localhost:5678/webhook/grade-interview", {
+        const res = await fetch("/api/grade-interview", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ answers })
@@ -87,7 +87,7 @@ export default function InterviewReport({ answers, onRetry, onRetryWeak, onStart
         const data = await res.json();
         setReport(data);
         setLoading(false);
-        saveSession(data, answers);
+        saveSession(data, answers); console.log("saveSession called", data);
         let s = 0;
         const interval = setInterval(() => {
           s += 0.5;
