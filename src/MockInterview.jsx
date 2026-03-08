@@ -166,7 +166,6 @@ export default function MockInterview({ data, onFinish }) {
     setShowWarning(false);
     const newTime = timeLeft + 30;
     startTimer(currentIndexRef.current, newTime);
-    startListening();
   };
 
   const toggleMic = () => {
