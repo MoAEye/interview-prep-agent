@@ -5,6 +5,7 @@ import UploadForm from "./UploadForm";
 import QuestionsList from "./QuestionsList";
 import MockInterview from "./MockInterview";
 import InterviewReport from "./InterviewReport";
+import PracticeAgain from "./PracticeAgain";
 import { supabase } from "./supabaseClient";
 
 export default function App() {
@@ -38,6 +39,8 @@ export default function App() {
     setScreen("report");
   };
 
+  const handleShowPracticeAgain = () => setScreen("practiceagain");
+
   const handleRetryWeak = (weakAnswers) => {
     const weakQuestions = weakAnswers.map(a => ({
       question: a.question,
@@ -60,7 +63,22 @@ export default function App() {
       answers={answers}
       onRetry={() => setScreen("mock")}
       onRetryWeak={handleRetryWeak}
-      onStartOver={() => setScreen("upload")}
+      onStartOver={handleShowPracticeAgain}
+      onDone={handleShowPracticeAgain}
+    />
+  );
+  if (screen === "practiceagain") return (
+    <PracticeAgain
+      onRedoFull={() => setScreen("mock")}
+      onRedoWeak={() => {
+        if (answers) {
+          const weak = answers.filter(a => !a.skipped && (a.score === undefined || a.score < 7));
+          if (weak.length > 0) handleRetryWeak(weak);
+          else setScreen("mock");
+        }
+      }}
+      onNewInterview={() => setScreen("upload")}
+      onHome={() => setScreen("landing")}
     />
   );
 }

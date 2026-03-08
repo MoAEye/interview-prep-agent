@@ -59,11 +59,14 @@ export default function MockInterview({ data, onFinish }) {
     const r = new SR();
     r.continuous = true;
     r.interimResults = true;
+    const answerBeforeMic = answerRef.current;
     r.onresult = (e) => {
-      if (isTypingRef.current) return;
-      const t = Array.from(e.results).map(x => x[0].transcript).join("");
-      setAnswer(t);
-      answerRef.current = t;
+      const finals = Array.from(e.results).filter(x => x.isFinal).map(x => x[0].transcript).join(" ");
+      const interim = Array.from(e.results).filter(x => !x.isFinal).map(x => x[0].transcript).join(" ");
+      const speech = finals || interim;
+      const combined = answerBeforeMic ? answerBeforeMic.trimEnd() + " " + speech : speech;
+      setAnswer(combined);
+      answerRef.current = combined;
     };
     r.onerror = () => {};
     try { r.start(); recognitionRef.current = r; setIsListening(true); } catch {}
