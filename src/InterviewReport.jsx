@@ -10,6 +10,25 @@ export default function InterviewReport({ answers, onRetry, onRetryWeak, onStart
   const [animatedStars, setAnimatedStars] = useState(0);
   const hasSpokeRef = useRef(false);
   const hasGradedRef = useRef(false);
+  const hasSavedRef = useRef(false);
+
+  const saveSession = async (gradeData, answersData) => {
+    if (hasSavedRef.current) return;
+    hasSavedRef.current = true;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("interview_sessions").insert({
+        user_id: user.id,
+        score: gradeData.overall_score || 0,
+        stars: gradeData.stars || 0,
+        job_title: gradeData.job_title || "Interview",
+        answers: answersData,
+      });
+    } catch (err) {
+      console.error("Failed to save session:", err);
+    }
+  };
 
   const speak = (text) => {
     window.speechSynthesis.cancel();
@@ -68,6 +87,7 @@ export default function InterviewReport({ answers, onRetry, onRetryWeak, onStart
         const data = await res.json();
         setReport(data);
         setLoading(false);
+        saveSession(data, answers);
         let s = 0;
         const interval = setInterval(() => {
           s += 0.5;
