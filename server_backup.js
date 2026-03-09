@@ -20,65 +20,25 @@ app.post('/api/generate-questions', async (req, res) => {
     });
     const data = await response.json();
     const text = data.choices[0].message.content.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(text);
-
-parsed.overall_score = Number(parsed.overall_score) || 0;
-parsed.star_rating = Number(parsed.star_rating) || 0;
-
-if (Array.isArray(parsed.question_grades)) {
-  parsed.question_grades = parsed.question_grades.map(q => ({
-    ...q,
-    score: Number(q.score) || 0
-  }));
-}
-
-
-function safeNumber(value, fallback = 0) {
-  const n = Number(value);
-  if (Number.isFinite(n)) return n;
-  return fallback;
-}
-
-function clamp(n, min, max) {
-  return Math.min(Math.max(n, min), max);
-}
-
-app.post("/grade-interview", async (req, res) => {
-  try {
-    const { text } = req.body;
-
-    let parsed;
-
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      parsed = {};
-    }
-
-    parsed.overall_score = clamp(safeNumber(parsed.overall_score, 0), 0, 100);
-    parsed.star_rating = clamp(safeNumber(parsed.star_rating, 0), 0, 5);
-
-    if (!Array.isArray(parsed.question_grades)) {
-      parsed.question_grades = [];
-    }
-
-    parsed.question_grades = parsed.question_grades.map((q) => ({
-      question: q?.question || "",
-      score: clamp(safeNumber(q?.score, 0), 0, 10),
-      feedback: q?.feedback || "No feedback provided"
-    }));
-
-    res.status(200).json(parsed);
-
-  } catch (error) {
-    console.error("Grading error:", error);
-
-    res.status(200).json({
-      overall_score: 0,
-      star_rating: 0,
-      question_grades: [],
-      feedback: "Grading failed but system recovered safely."
-    });
-  }
+    res.status(200).json(JSON.parse(text));
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.post('/api/grade-interview', async (req, res) => {
+  const { answers } = req.body;
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: JSON.stringify({
+        model: "gpt-4o", temperature: 0.4,
+        messages: [{ role: "user", content: `You are an expert interview coach. Grade this mock interview.\n\nANSWERS:\n${JSON.stringify(answers, null, 2)}\n\nReturn ONLY valid JSON:\n{\n  "overall_score": 75,\n  "star_rating": 3.5,\n  "overall_grade": "B+",\n  "aria_summary": "2-3 sentence spoken summary",\n  "strengths": ["x3"],\n  "improvements": ["x3"],\n  "question_grades": [{ "question": "...", "answer_given": "...", "score": 7, "skipped": false, "what_was_good": "...", "what_to_improve": "...", "ideal_answer": "..." }]\n}\nStar rating 0-5 in 0.5 steps. No extra text, just JSON.` }]
+      })
+    });
+    const data = await response.json();
+    const text = data.choices[0].message.content.replace(/```json|```/g, "").trim();
+    res.status(200).json(JSON.parse(text));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.listen(3001, () => console.log('✅ API server running on port 3001'));

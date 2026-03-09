@@ -23,8 +23,8 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
       if (!session?.user) return;
       await supabase.from("interview_sessions").insert({
         user_id: session.user.id,
-        score: gradeData.overall_score || 0,
-        stars: gradeData.star_rating || 0,
+        overall_score: gradeData.overall_score || 0,
+        star_rating: gradeData.star_rating || 0,
         job_title: jobTitle || gradeData.job_title || "Interview",
         answers: answersData,
       });
