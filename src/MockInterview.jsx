@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 
-export default function MockInterview({ data, onFinish }) {
+export default function MockInterview({ data, jobTitle, onFinish }) {
   const questions = data?.interview_questions || [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
@@ -159,7 +159,7 @@ export default function MockInterview({ data, onFinish }) {
       finishedRef.current = true;
       isDoneRef.current = true;
       setPhase("finished");
-      onFinish([...answersRef.current]);
+      onFinish([...answersRef.current], jobTitle);
     } else {
       beginQuestion(nextIndex);
     }

@@ -16,38 +16,54 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: `You are an expert interview coach. Grade the interview and return ONLY valid JSON with this exact structure:
+            content: `You are an expert interview coach. Grade the interview and return ONLY valid JSON with no markdown, no code fences, just raw JSON with this exact structure:
 {
   "overall_score": <number 0-100>,
   "star_rating": <number 0-5>,
-  "summary": "<2-3 sentence overall feedback>",
-  "strengths": ["strength1", "strength2"],
-  "improvements": ["improvement1", "improvement2"],
+  "summary": "<2-3 sentence overall feedback spoken as Aria, a friendly coach>",
+  "strengths": ["strength1", "strength2", "strength3"],
+  "improvements": ["improvement1", "improvement2", "improvement3"],
   "question_grades": [
     {
+      "question": "<copy the question text exactly from the input>",
+      "answer_given": "<copy the user answer exactly from the input>",
       "score": <number 0-10>,
-      "what_was_good": "<feedback>",
-      "what_to_improve": "<feedback>",
-      "ideal_answer": "<ideal answer>"
+      "what_was_good": "<specific positive feedback>",
+      "what_to_improve": "<specific constructive feedback>",
+      "ideal_answer": "<example of a strong answer>"
     }
   ]
 }`
           },
           {
             role: "user",
-            content: `Grade these interview answers: ${JSON.stringify(answers)}`
+            content: `Grade these interview answers. Each item has a "question" and "answer" field: ${JSON.stringify(answers)}`
           }
         ]
       })
     });
 
     const data = await response.json();
+
+    if (!data.choices?.[0]?.message?.content) {
+      console.error("OpenAI response missing content:", JSON.stringify(data));
+      return res.status(500).json({ error: "OpenAI returned no content" });
+    }
+
     const text = data.choices[0].message.content;
     const clean = text.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(clean);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(clean);
+    } catch (parseErr) {
+      console.error("JSON parse failed. Raw GPT output:", text);
+      return res.status(500).json({ error: "Failed to parse GPT response", raw: text });
+    }
+
     res.status(200).json(parsed);
   } catch (err) {
-    console.error(err);
+    console.error("grade-interview error:", err);
     res.status(500).json({ error: "Failed to grade interview" });
   }
 }
