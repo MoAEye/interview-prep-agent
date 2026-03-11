@@ -21,13 +21,20 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
-      await supabase.from("interview_sessions").insert({
+      const score = Math.max(0, Math.min(100, Number.isFinite(Number(gradeData?.overall_score)) ? Math.round(Number(gradeData.overall_score)) : 0));
+      const stars = Math.max(0, Math.min(5, Number.isFinite(Number(gradeData?.star_rating)) ? Number(gradeData.star_rating) : 0));
+
+      const { error } = await supabase.from("interview_sessions").insert({
         user_id: session.user.id,
-        overall_score: gradeData.overall_score || 0,
-        star_rating: gradeData.star_rating || 0,
+        score,
+        stars,
         job_title: jobTitle || gradeData.job_title || "Interview",
         answers: answersData,
       });
+
+      if (error) {
+        console.error("❌ Failed to save session:", error);
+      }
     } catch (err) { console.error("❌ Failed to save session:", err); }
   };
 
@@ -43,8 +50,8 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
   };
 
   const buildStaticHTML = () => {
-    const scoreVal = report.overall_score;
-    const starsVal = report.star_rating;
+    const scoreVal = Number.isFinite(Number(report?.overall_score)) ? Number(report.overall_score) : 0;
+    const starsVal = Number.isFinite(Number(report?.star_rating)) ? Number(report.star_rating) : 0;
     const stars = [1,2,3,4,5].map(i => i <= starsVal ? "⭐" : "☆").join(" ");
     const strengths = (report.strengths || []).map(s => `<li>${s}</li>`).join("");
     const improvements = (report.improvements || []).map(s => `<li>${s}</li>`).join("");
@@ -100,8 +107,8 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
 
   const shareImage = async (e) => {
     if (e) e.preventDefault();
-    const score = report.overall_score;
-    const stars = report.star_rating;
+    const score = Number.isFinite(Number(report?.overall_score)) ? Number(report.overall_score) : 0;
+    const stars = Number.isFinite(Number(report?.star_rating)) ? Number(report.star_rating) : 0;
     const starsHTML = [1,2,3,4,5].map(i => i <= stars ? "⭐" : "☆").join(" ");
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
       body{margin:0;padding:0;background:#f8f4ff;font-family:-apple-system,sans-serif;}
@@ -164,15 +171,15 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
         let count = 0;
         const scoreInterval = setInterval(() => {
           count += 2;
-          setAnimatedScore(Math.min(count, data.overall_score));
-          if (count >= data.overall_score) clearInterval(scoreInterval);
+          const targetScore = Number.isFinite(Number(data?.overall_score)) ? Number(data.overall_score) : 0; setAnimatedScore(Math.min(count, targetScore));
+          if (count >= targetScore) clearInterval(scoreInterval);
         }, 20);
         // Animate stars
         let s = 0;
         const starsInterval = setInterval(() => {
           s += 0.5;
           setAnimatedStars(s);
-          if (s >= data.star_rating) clearInterval(starsInterval);
+          const targetStars = Number.isFinite(Number(data?.star_rating)) ? Number(data.star_rating) : 0; if (s >= targetStars) clearInterval(starsInterval);
         }, 150);
         if (!hasSpokeRef.current) {
           hasSpokeRef.current = true;
