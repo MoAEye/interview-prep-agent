@@ -10,10 +10,7 @@ function safeArray(v) {
 
 export default async function handler(req, res) {
   try {
-    const body = req.body || {};
-    const cvText = body.cvText || body.resume_text || body.resumeText || "";
-    const jobDescription = body.jobDescription || body.job_description || body.jobDescriptionText || "";
-    const jobTitle = body.jobTitle || body.job_title || body.title || "";
+    const { cvText = "", jobDescription = "" } = req.body || {};
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
@@ -25,7 +22,7 @@ export default async function handler(req, res) {
         },
         {
           role: "user",
-          content: JSON.stringify({ cvText, jobTitle, jobDescription }),
+          content: JSON.stringify({ cvText, jobDescription }),
         },
       ],
       response_format: { type: "json_object" },

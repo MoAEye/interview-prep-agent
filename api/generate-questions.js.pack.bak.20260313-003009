@@ -1,0 +1,54 @@
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+function safeArray(v) {
+  return Array.isArray(v) ? v : [];
+}
+
+export default async function handler(req, res) {
+  try {
+    const { cvText = "", jobDescription = "" } = req.body || {};
+
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            'You generate interview questions. Return ONLY valid JSON in this exact shape: {"questions":[{"question":string,"type":string,"reason":string,"targets":string,"relevance_score":number}]}. Generate exactly 5 questions tailored to the CV and job description. Keep each reason under 20 words. targets can be empty string. relevance_score must be 1-10.',
+        },
+        {
+          role: "user",
+          content: JSON.stringify({ cvText, jobDescription }),
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const raw = completion?.choices?.[0]?.message?.content || "{}";
+    let parsed = {};
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = {};
+    }
+
+    const questions = safeArray(parsed.questions).slice(0, 5).map((q) => ({
+      question: typeof q?.question === "string" ? q.question : "",
+      type: typeof q?.type === "string" ? q.type : "general",
+      reason: typeof q?.reason === "string" ? q.reason : "",
+      targets: typeof q?.targets === "string" ? q.targets : "",
+      relevance_score: Number.isFinite(Number(q?.relevance_score))
+        ? Number(q.relevance_score)
+        : 5,
+    }));
+
+    res.status(200).json({ questions });
+  } catch (error) {
+    console.error("generate-questions error:", error && (error.stack || error.message || error));
+    res.status(500).json({ error: "Failed to generate questions" });
+  }
+}

@@ -34,26 +34,12 @@ export default function App() {
   }, []);
 
   const handleResults = (data, jobTitle) => {
-    // API may return either:
-    // 1) { questions: [...] , candidate_summary, job_summary, ... }  (prep pack)
-    // 2) { interview_questions: [...] } (legacy)
-    // 3) [...] (array of questions)
-    // 4) { interview_questions: { ... } } (edge)
-    if (Array.isArray(data)) {
-      setResults({ interview_questions: data, job_title: jobTitle || undefined });
-    } else if (data?.questions && Array.isArray(data.questions)) {
-      // Preserve full pack fields + map questions into interview_questions (what the UI uses)
-      setResults({ ...data, interview_questions: data.questions, job_title: jobTitle || data.job_title });
-    } else if (data?.interview_questions) {
-      setResults({ ...data, job_title: jobTitle || data.job_title });
-    } else if (data?.[0]?.interview_questions) {
-      setResults({ ...data[0], job_title: jobTitle || data[0]?.job_title });
-    } else {
-      setResults({ interview_questions: data, job_title: jobTitle || undefined });
-    }
-
+    if (Array.isArray(data)) setResults({ interview_questions: data });
+    else if (data?.interview_questions) setResults(data);
+    else if (data?.[0]?.interview_questions) setResults(data[0]);
+    else setResults({ interview_questions: data });
     setScreen("questions");
-    if (jobTitle) setResults((prev) => ({ ...prev, job_title: jobTitle }));
+    if (jobTitle) setResults(prev => ({ ...prev, job_title: jobTitle }));
   };
 
   const handleFinish = (completedAnswers, jobTitle) => {

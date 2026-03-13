@@ -273,7 +273,7 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
         <div className="report-card" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
           <div style={{ background: "white", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 4px 20px rgba(108,99,255,0.06)" }}>
             <h3 style={{ color: "#2d6a4f", fontWeight: "800", fontSize: "0.9rem", marginBottom: "1rem" }}>💪 What You Did Well</h3>
-            {report.strengths?.map((s, i) => (
+            {(Array.isArray(report.strengths) ? report.strengths : []).map((s, i) => (
               <div key={i} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem", alignItems: "flex-start" }}>
                 <span style={{ color: "#4ecdc4", fontWeight: "900", marginTop: "1px" }}>✓</span>
                 <span style={{ color: "#444", fontSize: "0.85rem", lineHeight: "1.5" }}>{s}</span>
@@ -282,7 +282,7 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
           </div>
           <div style={{ background: "white", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 4px 20px rgba(108,99,255,0.06)" }}>
             <h3 style={{ color: "#b85c2e", fontWeight: "800", fontSize: "0.9rem", marginBottom: "1rem" }}>🎯 Areas to Improve</h3>
-            {report.improvements?.map((s, i) => (
+            {(Array.isArray(report.improvements) ? report.improvements : []).map((s, i) => (
               <div key={i} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem", alignItems: "flex-start" }}>
                 <span style={{ color: "#ff9a4d", fontWeight: "900", marginTop: "1px" }}>→</span>
                 <span style={{ color: "#444", fontSize: "0.85rem", lineHeight: "1.5" }}>{s}</span>
@@ -292,7 +292,7 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
         </div>
 
         <h2 className="report-card" style={{ color: "#1e3a5f", fontWeight: "800", marginBottom: "1rem", fontSize: "1.1rem" }}>📋 Question Breakdown</h2>
-        {report.question_grades?.map((q, i) => {
+        {(Array.isArray(report.question_grades) ? report.question_grades : []).map((q, i) => {
           const colors = scoreColor(q.score);
           const isSkipped = q.skipped || answers[i]?.skipped;
           return (

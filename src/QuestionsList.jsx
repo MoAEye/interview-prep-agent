@@ -54,7 +54,7 @@ export default function QuestionsList({ questions, onStartOver, onStartInterview
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ background: "white", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 4px 20px rgba(108,99,255,0.08)" }}>
               <h3 style={{ color: "#2e7d32", fontSize: "0.8rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>💪 Resume Strengths</h3>
-              {data.top_resume_signals?.map((s, i) => (
+              {(Array.isArray(data.top_resume_signals) ? data.top_resume_signals : []).map((s, i) => (
                 <div key={i} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
                   <span style={{ color: "#4ecdc4", fontWeight: "700", fontSize: "0.8rem" }}>✓</span>
                   <span style={{ color: "#555", fontSize: "0.82rem", lineHeight: "1.4" }}>{s}</span>
@@ -63,7 +63,7 @@ export default function QuestionsList({ questions, onStartOver, onStartInterview
             </div>
             <div style={{ background: "white", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 4px 20px rgba(108,99,255,0.08)" }}>
               <h3 style={{ color: "#1e3a5f", fontSize: "0.8rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>🎯 Job Priorities</h3>
-              {data.top_job_priorities?.map((p, i) => (
+              {(Array.isArray(data.top_job_priorities) ? data.top_job_priorities : []).map((p, i) => (
                 <div key={i} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
                   <span style={{ color: "#6c63ff", fontWeight: "700", fontSize: "0.8rem" }}>{i + 1}.</span>
                   <span style={{ color: "#555", fontSize: "0.82rem", lineHeight: "1.4" }}>{p}</span>
@@ -72,7 +72,7 @@ export default function QuestionsList({ questions, onStartOver, onStartInterview
             </div>
             <div style={{ background: "white", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 4px 20px rgba(108,99,255,0.08)" }}>
               <h3 style={{ color: "#bf2e2e", fontSize: "0.8rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>⚠️ Likely Gaps</h3>
-              {data.likely_weaknesses?.map((w, i) => (
+              {(Array.isArray(data.likely_weaknesses) ? data.likely_weaknesses : []).map((w, i) => (
                 <div key={i} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
                   <span style={{ color: "#ff6b6b", fontWeight: "700", fontSize: "0.8rem" }}>!</span>
                   <span style={{ color: "#555", fontSize: "0.82rem", lineHeight: "1.4" }}>{w}</span>
@@ -83,7 +83,7 @@ export default function QuestionsList({ questions, onStartOver, onStartInterview
         )}
 
         {/* Questions */}
-        {qs?.map((q, i) => (
+        {(Array.isArray(qs) ? qs : []).map((q, i) => (
           <div key={i} style={{ background: "white", borderRadius: "16px", padding: "1.5rem", marginBottom: "1rem", boxShadow: "0 4px 20px rgba(108,99,255,0.06)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
               <span style={{ fontWeight: "800", color: "#6c63ff", fontSize: "0.9rem" }}>Q{i + 1}</span>
