@@ -62,9 +62,9 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
         <div style="font-weight:700;color:#1e3a5f;margin-bottom:8px;">${skipped ? "⚠️ SKIPPED" : q.score+"/10"} — ${q.question || ans?.question || "Question "+(i+1)}</div>
         ${skipped ? "<p style='color:#ff6b6b'>This question was skipped.</p>" : `
           <p style="font-size:13px;color:#555;margin-bottom:8px;"><strong>Your answer:</strong> ${q.answer_given || ans?.answer || "—"}</p>
-          <p style="font-size:13px;color:#2d6a4f;margin-bottom:4px;"><strong>✅ What was good:</strong> ${q.what_was_good}</p>
-          <p style="font-size:13px;color:#b8860b;margin-bottom:4px;"><strong>🎯 To improve:</strong> ${q.what_to_improve}</p>
-          <p style="font-size:13px;color:#6c63ff;"><strong>💡 Ideal:</strong> ${q.ideal_answer}</p>`}
+          <p style="font-size:13px;color:#2d6a4f;margin-bottom:4px;"><strong>✅ What was good:</strong> ${(q.what_was_good || q.feedback || "")}</p>
+          <p style="font-size:13px;color:#b8860b;margin-bottom:4px;"><strong>🎯 To improve:</strong> ${(q.what_to_improve || "")}</p>
+          <p style="font-size:13px;color:#6c63ff;"><strong>💡 Ideal:</strong> ${(q.ideal_answer || "")}</p>`}
       </div>`;
     }).join("");
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
@@ -321,16 +321,16 @@ export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWea
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
                         <div style={{ background: "#f0fff4", borderRadius: "10px", padding: "1rem" }}>
                           <div style={{ fontSize: "0.72rem", color: "#2d6a4f", fontWeight: "700", marginBottom: "0.4rem", letterSpacing: "0.05em" }}>✅ WHAT WAS GOOD</div>
-                          <p style={{ color: "#444", fontSize: "0.84rem", lineHeight: "1.5", margin: 0 }}>{q.what_was_good}</p>
+                          <p style={{ color: "#444", fontSize: "0.84rem", lineHeight: "1.5", margin: 0 }}>{(q.what_was_good || q.feedback || "")}</p>
                         </div>
                         <div style={{ background: "#fff9e6", borderRadius: "10px", padding: "1rem" }}>
                           <div style={{ fontSize: "0.72rem", color: "#b8860b", fontWeight: "700", marginBottom: "0.4rem", letterSpacing: "0.05em" }}>🎯 WHAT TO IMPROVE</div>
-                          <p style={{ color: "#444", fontSize: "0.84rem", lineHeight: "1.5", margin: 0 }}>{q.what_to_improve}</p>
+                          <p style={{ color: "#444", fontSize: "0.84rem", lineHeight: "1.5", margin: 0 }}>{(q.what_to_improve || "")}</p>
                         </div>
                       </div>
                       <div style={{ background: "linear-gradient(135deg, #f0edff, #e8f7ff)", borderRadius: "10px", padding: "1rem" }}>
                         <div style={{ fontSize: "0.72rem", color: "#6c63ff", fontWeight: "700", marginBottom: "0.4rem", letterSpacing: "0.05em" }}>💡 IDEAL ANSWER</div>
-                        <p style={{ color: "#444", fontSize: "0.84rem", lineHeight: "1.5", margin: 0 }}>{q.ideal_answer}</p>
+                        <p style={{ color: "#444", fontSize: "0.84rem", lineHeight: "1.5", margin: 0 }}>{(q.ideal_answer || "")}</p>
                       </div>
                     </>
                   )}

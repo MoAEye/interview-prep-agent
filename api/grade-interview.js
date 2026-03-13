@@ -14,7 +14,6 @@ function safeNumber(value, fallback = 0) {
       if (Number.isFinite(n)) return n;
     }
   }
-
   return fallback;
 }
 
@@ -22,56 +21,41 @@ function clamp(num, min, max) {
   return Math.min(Math.max(num, min), max);
 }
 
-export default async function handler(req, res) {
-  console.log("DEBUG grade-interview hit", {
-    method: req.method,
-    hasBody: !!req.body,
-    bodyKeys: Object.keys(req.body || {}),
-  });
+function safeArray(v) {
+  return Array.isArray(v) ? v : [];
+}
 
+export default async function handler(req, res) {
   try {
     const answers = req.body?.answers || req.body?.answersData || [];
 
-    console.log("DEBUG before openai");
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
           content:
-            'You are an interview coach. Return ONLY valid JSON with this exact shape: {"overall_score": number, "star_rating": number, "summary": string, "strengths": string[], "improvements": string[], "question_grades": [{"question": string, "score": number, "feedback": string}]}. Keep summary under 60 words. Keep strengths and improvements to max 3 short items each. Keep each question feedback under 20 words. Do not include answer_given, what_was_good, what_to_improve, or ideal_answer. No markdown. No extra text.',
+            'You are an interview coach. Return ONLY valid JSON with this exact shape: {"overall_score":number,"star_rating":number,"summary":string,"strengths":string[],"improvements":string[],"question_grades":[{"question":string,"score":number,"answer_given":string,"what_was_good":string,"what_to_improve":string,"ideal_answer":string}]}. Rules: overall_score must be 0-100. star_rating 0-5. Each question score 0-10. Keep summary under 60 words. strengths/improvements max 3 items. Keep fields non-empty when possible. No markdown, no extra text.',
         },
-        {
-          role: "user",
-          content: JSON.stringify(answers),
-        },
+        { role: "user", content: JSON.stringify(answers) },
       ],
       response_format: { type: "json_object" },
     });
 
     const raw = completion?.choices?.[0]?.message?.content || "";
-    console.log("DEBUG openai raw", raw);
 
+    // Remove markdown fences if any
+    const cleaned = raw.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    // Extract JSON object if wrapped
     let parsed = {};
-
     try {
-      const cleaned = raw
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
-
       const match = cleaned.match(/\{[\s\S]*\}/);
       parsed = match ? JSON.parse(match[0]) : {};
-
-      if (!match) {
-        console.error("No JSON found in GPT response:", cleaned);
-      }
     } catch (err) {
-      console.error("JSON parse failed. Raw GPT output:", raw);
-
+      // Last resort: salvage score fields so UI never NaNs
       const scoreMatch = raw.match(/"overall_score"\s*:\s*(\d+(?:\.\d+)?)/);
       const starMatch = raw.match(/"star_rating"\s*:\s*(\d+(?:\.\d+)?)/);
-
       parsed = {
         overall_score: scoreMatch ? Number(scoreMatch[1]) : 0,
         star_rating: starMatch ? Number(starMatch[1]) : 0,
@@ -82,43 +66,34 @@ export default async function handler(req, res) {
       };
     }
 
-    parsed.overall_score = clamp(
-      Math.round(safeNumber(parsed.overall_score)),
-      0,
-      100
-    );
+    // Normalise overall_score
+    let overall = clamp(Math.round(safeNumber(parsed?.overall_score)), 0, 100);
+    // If model gave 1–10 (common), convert to 10–100
+    if (overall > 0 && overall <= 10) overall = clamp(Math.round(overall * 10), 0, 100);
 
-    parsed.star_rating = clamp(
-      safeNumber(parsed.star_rating),
-      0,
-      5
-    );
+    const star = clamp(safeNumber(parsed?.star_rating), 0, 5);
 
-    if (!Array.isArray(parsed.strengths)) {
-      parsed.strengths = [];
-    }
-
-    if (!Array.isArray(parsed.improvements)) {
-      parsed.improvements = [];
-    }
-
-    if (!Array.isArray(parsed.question_grades)) {
-      parsed.question_grades = [];
-    }
-
-    parsed.question_grades = parsed.question_grades.map((q) => ({
-      question: q?.question || "",
+    const question_grades = safeArray(parsed?.question_grades).map((q, i) => ({
+      question: typeof q?.question === "string" ? q.question : "",
       score: clamp(safeNumber(q?.score), 0, 10),
-      feedback: q?.feedback || "",
+      answer_given: typeof q?.answer_given === "string" ? q.answer_given : (typeof q?.answer === "string" ? q.answer : ""),
+      what_was_good: typeof q?.what_was_good === "string" ? q.what_was_good : (typeof q?.feedback === "string" ? q.feedback : ""),
+      what_to_improve: typeof q?.what_to_improve === "string" ? q.what_to_improve : "",
+      ideal_answer: typeof q?.ideal_answer === "string" ? q.ideal_answer : "",
     }));
 
-    console.log("DEBUG parsed result", parsed);
-    res.status(200).json(parsed);
+    const out = {
+      overall_score: overall,
+      star_rating: star,
+      summary: typeof parsed?.summary === "string" ? parsed.summary : "",
+      strengths: safeArray(parsed?.strengths).filter((x) => typeof x === "string").slice(0, 3),
+      improvements: safeArray(parsed?.improvements).filter((x) => typeof x === "string").slice(0, 3),
+      question_grades,
+    };
+
+    res.status(200).json(out);
   } catch (error) {
-    console.error(
-      "Grade Interview Error:",
-      error && (error.stack || error.message || error)
-    );
+    console.error("Grade Interview Error:", error && (error.stack || error.message || error));
     res.status(500).json({ error: "grading_failed" });
   }
 }
