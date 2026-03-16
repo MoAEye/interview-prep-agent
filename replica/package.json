@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "setup": "node -e \"const fs=require('fs'); if(!fs.existsSync('.env.local')) fs.copyFileSync('.env.example','.env.local'); console.log('Created .env.local — add your Supabase + OpenAI keys, then run: npm run start');\" && npm install",
-    "use-keys": "node -e \"const fs=require('fs'); const path=require('path'); const p=path.join(__dirname,'OPEN-THIS-FILE-ADD-YOUR-KEYS.txt'); if(!fs.existsSync(p)){ console.log('Missing OPEN-THIS-FILE-ADD-YOUR-KEYS.txt'); process.exit(1); } const s=fs.readFileSync(p,'utf8'); const lines=s.split('\\n').filter(l=>/^[A-Za-z_][A-Za-z0-9_]*=/.test(l.trim())); fs.writeFileSync('.env.local', lines.join('\\n')); console.log('Keys copied to .env.local. Run: npm run start');\"",
-    "fix-vercel": "node -e \"const fs=require('fs'); const p=require('path').join(__dirname,'.vercel'); if(fs.existsSync(p)){ fs.rmSync(p, { recursive: true }); console.log('Removed .vercel — run: npm run start'); } else { console.log('No .vercel folder'); }\"",
-    "start": "node run-with-env.js",
+    "start": "vercel dev",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

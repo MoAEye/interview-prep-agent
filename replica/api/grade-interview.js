@@ -1,25 +1,4 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
 import OpenAI from "openai";
-
-function loadEnvLocal() {
-  try {
-    const dirs = [path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."), process.cwd()];
-    for (const dir of dirs) {
-      const p = path.join(dir, ".env.local");
-      if (fs.existsSync(p)) {
-        const content = fs.readFileSync(p, "utf8");
-        content.split("\n").forEach((line) => {
-          const m = line.trim().match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-          if (m) process.env[m[1]] = m[2].trim();
-        });
-        return;
-      }
-    }
-  } catch (_) {}
-}
-loadEnvLocal();
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -46,22 +25,11 @@ function safeArray(v) {
   return Array.isArray(v) ? v : [];
 }
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-const RATE_LIMIT_RETRIES = 3;
-const RATE_LIMIT_WAIT_MS = 5000;
-
 export default async function handler(req, res) {
   try {
     const answers = req.body?.answers || req.body?.answersData || [];
 
-    let completion;
-    let lastError;
-    for (let attempt = 1; attempt <= RATE_LIMIT_RETRIES; attempt++) {
-      try {
-        completion = await openai.chat.completions.create({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -72,19 +40,7 @@ export default async function handler(req, res) {
         { role: "user", content: JSON.stringify(answers) },
       ],
       response_format: { type: "json_object" },
-        });
-        break;
-      } catch (err) {
-        lastError = err;
-        const isRateLimit = (err?.message || "").includes("429") || err?.status === 429;
-        if (isRateLimit && attempt < RATE_LIMIT_RETRIES) {
-          await sleep(RATE_LIMIT_WAIT_MS);
-          continue;
-        }
-        throw err;
-      }
-    }
-    if (!completion) throw lastError;
+    });
 
     const raw = completion?.choices?.[0]?.message?.content || "";
 

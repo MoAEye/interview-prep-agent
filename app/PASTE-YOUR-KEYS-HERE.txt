@@ -1,0 +1,6 @@
+# Paste your 3 keys below (replace the fake values), then save this file.
+# After saving, you'll run one command so the app can use them.
+
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+OPENAI_API_KEY=sk-your-openai-key-here

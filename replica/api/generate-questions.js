@@ -1,58 +1,23 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
 import OpenAI from "openai";
-
-function loadEnvLocal() {
-  try {
-    const dirs = [path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."), process.cwd()];
-    for (const dir of dirs) {
-      const p = path.join(dir, ".env.local");
-      if (fs.existsSync(p)) {
-        const content = fs.readFileSync(p, "utf8");
-        content.split("\n").forEach((line) => {
-          const m = line.trim().match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-          if (m) process.env[m[1]] = m[2].trim();
-        });
-        return;
-      }
-    }
-  } catch (_) {}
-}
-loadEnvLocal();
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const COUNT = 8; // <-- change to 10 if you want 10 questions
-const RATE_LIMIT_RETRIES = 3;
-const RATE_LIMIT_WAIT_MS = 5000;
 
 function safeArray(v) {
   return Array.isArray(v) ? v : [];
 }
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
 export default async function handler(req, res) {
-  if (!process.env.OPENAI_API_KEY) {
-    res.status(500).json({ error: "OpenAI API key is missing. Add OPENAI_API_KEY to .env.local and restart (npm run start)." });
-    return;
-  }
   try {
     const body = req.body || {};
     const cvText = body.cvText || body.resume_text || body.resumeText || "";
     const jobDescription = body.jobDescription || body.job_description || "";
     const jobTitle = body.jobTitle || body.job_title || body.title || "";
 
-    let completion;
-    let lastError;
-    for (let attempt = 1; attempt <= RATE_LIMIT_RETRIES; attempt++) {
-      try {
-        completion = await client.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -78,19 +43,7 @@ No markdown. No extra text.`,
         },
       ],
       response_format: { type: "json_object" },
-        });
-        break;
-      } catch (err) {
-        lastError = err;
-        const isRateLimit = (err?.message || "").includes("429") || err?.status === 429;
-        if (isRateLimit && attempt < RATE_LIMIT_RETRIES) {
-          await sleep(RATE_LIMIT_WAIT_MS);
-          continue;
-        }
-        throw err;
-      }
-    }
-    if (!completion) throw lastError;
+    });
 
     const raw = completion?.choices?.[0]?.message?.content || "{}";
     let parsed = {};
@@ -129,11 +82,7 @@ No markdown. No extra text.`,
 
     res.status(200).json(pack);
   } catch (error) {
-    const msg = error?.message || "";
-    let userMsg = "Failed to generate questions.";
-    if (msg.includes("401") || msg.includes("Incorrect API key")) userMsg = "Invalid OpenAI API key. Check OPENAI_API_KEY in .env.local.";
-    if (msg.includes("429")) userMsg = "OpenAI rate limit. Wait a moment and try again.";
     console.error("generate-questions error:", error && (error.stack || error.message || error));
-    res.status(500).json({ error: userMsg });
+    res.status(500).json({ error: "Failed to generate questions" });
   }
 }

@@ -27,7 +27,6 @@ const openai = new OpenAI({
 
 function safeNumber(value, fallback = 0) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
-
   if (typeof value === "string") {
     const match = value.match(/-?\d+(\.\d+)?/);
     if (match) {
@@ -46,22 +45,11 @@ function safeArray(v) {
   return Array.isArray(v) ? v : [];
 }
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-const RATE_LIMIT_RETRIES = 3;
-const RATE_LIMIT_WAIT_MS = 5000;
-
 export default async function handler(req, res) {
   try {
     const answers = req.body?.answers || req.body?.answersData || [];
 
-    let completion;
-    let lastError;
-    for (let attempt = 1; attempt <= RATE_LIMIT_RETRIES; attempt++) {
-      try {
-        completion = await openai.chat.completions.create({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -72,32 +60,16 @@ export default async function handler(req, res) {
         { role: "user", content: JSON.stringify(answers) },
       ],
       response_format: { type: "json_object" },
-        });
-        break;
-      } catch (err) {
-        lastError = err;
-        const isRateLimit = (err?.message || "").includes("429") || err?.status === 429;
-        if (isRateLimit && attempt < RATE_LIMIT_RETRIES) {
-          await sleep(RATE_LIMIT_WAIT_MS);
-          continue;
-        }
-        throw err;
-      }
-    }
-    if (!completion) throw lastError;
+    });
 
     const raw = completion?.choices?.[0]?.message?.content || "";
-
-    // Remove markdown fences if any
     const cleaned = raw.replace(/```json/g, "").replace(/```/g, "").trim();
 
-    // Extract JSON object if wrapped
     let parsed = {};
     try {
       const match = cleaned.match(/\{[\s\S]*\}/);
       parsed = match ? JSON.parse(match[0]) : {};
     } catch (err) {
-      // Last resort: salvage score fields so UI never NaNs
       const scoreMatch = raw.match(/"overall_score"\s*:\s*(\d+(?:\.\d+)?)/);
       const starMatch = raw.match(/"star_rating"\s*:\s*(\d+(?:\.\d+)?)/);
       parsed = {
@@ -110,9 +82,7 @@ export default async function handler(req, res) {
       };
     }
 
-    // Normalise overall_score
     let overall = clamp(Math.round(safeNumber(parsed?.overall_score)), 0, 100);
-    // If model gave 1–10 (common), convert to 10–100
     if (overall > 0 && overall <= 10) overall = clamp(Math.round(overall * 10), 0, 100);
 
     const star = clamp(safeNumber(parsed?.star_rating), 0, 5);

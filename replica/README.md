@@ -1,5 +1,9 @@
 # Interview Prep Agent
 
+**This folder is a clean, full copy of the app** — same code, no git history or secrets. Use it with your new Supabase and GitHub by following the steps below.
+
+---
+
 AI-powered mock interview app: upload resume + job description → get tailored questions → do a mock interview → get graded and save history.
 
 ---

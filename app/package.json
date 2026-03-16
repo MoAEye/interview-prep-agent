@@ -1,0 +1,29 @@
+{
+  "name": "interview-prep-agent",
+  "version": "1.0.0",
+  "description": "AI-powered mock interview app",
+  "scripts": {
+    "use-keys": "node -e \"const fs=require('fs'); const path=require('path'); const p=path.join(__dirname,'../OPEN-THIS-FILE-ADD-YOUR-KEYS.txt'); const s=fs.readFileSync(p,'utf8'); const lines=s.split('\\n').filter(l=>/^[A-Z_]+=/.test(l.trim())); fs.writeFileSync('.env.local', lines.join('\\n')); console.log('Done. Keys in place. Run: npm run start');\"",
+    "setup": "node -e \"const fs=require('fs'); if(!fs.existsSync('.env.local')) fs.copyFileSync('.env.example','.env.local'); console.log('Created .env.local — add your Supabase + OpenAI keys, then run: npm run start');\" && npm install",
+    "start": "node run-with-env.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.98.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.0",
+    "openai": "^6.27.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "vercel": "^47.0.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
+    "vite": "^7.3.1"
+  }
+}

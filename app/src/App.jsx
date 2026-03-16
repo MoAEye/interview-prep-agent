@@ -8,9 +8,6 @@ import InterviewReport from "./InterviewReport";
 import PracticeAgain from "./PracticeAgain";
 import InterviewHistory from "./InterviewHistory";
 import Dashboard from "./Dashboard";
-import Profile from "./Profile";
-import JobTracker from "./JobTracker";
-import DocumentsLibrary from "./DocumentsLibrary";
 import { supabase } from "./supabaseClient";
 
 export default function App() {
@@ -27,7 +24,7 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
-        setScreen(s => ["report", "mock", "questions", "history", "profile", "jobs", "documents"].includes(s) ? s : "upload");
+        setScreen(s => ["report", "mock", "questions", "history"].includes(s) ? s : "upload");
       } else {
         setUser(null);
         setScreen("landing");
@@ -36,25 +33,18 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleResults = (data, jobTitle, jobId) => {
-    const job_id = jobId || null;
-    // API may return either:
-    // 1) { questions: [...] , candidate_summary, job_summary, ... }  (prep pack)
-    // 2) { interview_questions: [...] } (legacy)
-    // 3) [...] (array of questions)
-    // 4) { interview_questions: { ... } } (edge)
+  const handleResults = (data, jobTitle) => {
     if (Array.isArray(data)) {
-      setResults({ interview_questions: data, job_title: jobTitle || undefined, job_id });
+      setResults({ interview_questions: data, job_title: jobTitle || undefined });
     } else if (data?.questions && Array.isArray(data.questions)) {
-      setResults({ ...data, interview_questions: data.questions, job_title: jobTitle || data.job_title, job_id });
+      setResults({ ...data, interview_questions: data.questions, job_title: jobTitle || data.job_title });
     } else if (data?.interview_questions) {
-      setResults({ ...data, job_title: jobTitle || data.job_title, job_id });
+      setResults({ ...data, job_title: jobTitle || data.job_title });
     } else if (data?.[0]?.interview_questions) {
-      setResults({ ...data[0], job_title: jobTitle || data[0]?.job_title, job_id });
+      setResults({ ...data[0], job_title: jobTitle || data[0]?.job_title });
     } else {
-      setResults({ interview_questions: data, job_title: jobTitle || undefined, job_id });
+      setResults({ interview_questions: data, job_title: jobTitle || undefined });
     }
-
     setScreen("questions");
     if (jobTitle) setResults((prev) => ({ ...prev, job_title: jobTitle }));
   };
@@ -69,14 +59,13 @@ export default function App() {
   const handleComplete = (s) => { setResults(prev => ({ ...prev, final_score: s })); setScreen("practiceagain"); }
 
   const handleRetryWeak = (weakAnswers) => {
-    const list = Array.isArray(weakAnswers) ? weakAnswers : [];
-    const weakQuestions = list.map(a => ({
+    const weakQuestions = weakAnswers.map(a => ({
       question: a.question,
       type: a.type,
       targets: a.targets,
       reason: a.reason,
     }));
-    setResults((prev) => ({ ...prev, interview_questions: weakQuestions }));
+    setResults({ ...results, interview_questions: weakQuestions });
     setScreen("mock");
   };
 
@@ -89,15 +78,17 @@ export default function App() {
     </div>
   );
 
-  if (screen === "landing") return <LandingPage onGetStarted={() => setScreen(user ? "upload" : "login")} />;
+  if (screen === "landing") return (
+    <LandingPage
+      onGetStarted={() => setScreen(user ? "upload" : "login")}
+      onTryDemo={() => { setUser({ id: "demo" }); setScreen("upload"); }}
+    />
+  );
   if (screen === "login") return <Login onLogin={(u) => { setUser(u); setScreen("upload"); }} />;
-  if (screen === "upload") return <UploadForm user={user} onQuestionsGenerated={handleResults} onShowHistory={() => setScreen("history")} onShowProfile={() => setScreen("profile")} onShowJobs={() => setScreen("jobs")} onShowDocuments={() => setScreen("documents")} />;
-  if (screen === "profile") return <Profile user={user} onBack={() => setScreen("upload")} />;
-  if (screen === "jobs") return <JobTracker user={user} onBack={() => setScreen("upload")} onShowDocuments={() => setScreen("documents")} />;
-  if (screen === "documents") return <DocumentsLibrary user={user} onBack={() => setScreen("upload")} />;
+  if (screen === "upload") return <UploadForm user={user} onQuestionsGenerated={handleResults} onShowHistory={() => setScreen("history")} onExitDemo={() => { setUser(null); setScreen("landing"); }} />;
   if (screen === "questions") return <QuestionsList questions={results} onStartOver={() => setScreen("upload")} onStartInterview={() => setScreen("mock")} />;
   if (screen === "mock") return <MockInterview data={results} jobTitle={results?.job_title} onFinish={handleFinish} />;
-  if (screen === "report") return <InterviewReport answers={answers} jobTitle={results?.job_title} jobId={results?.job_id} onRetry={() => setScreen("mock")} onRetryWeak={handleRetryWeak} onStartOver={handleShowPracticeAgain} onComplete={(s) => handleComplete(s)} />;
+  if (screen === "report") return <InterviewReport answers={answers} jobTitle={results?.job_title} onRetry={() => setScreen("mock")} onRetryWeak={handleRetryWeak} onStartOver={handleShowPracticeAgain} onComplete={(s) => handleComplete(s)} />;
   if (screen === "history") return <InterviewHistory onBack={() => setScreen("upload")} onShowDashboard={() => setScreen("dashboard")} />;
   if (screen === "dashboard") return <Dashboard onBack={() => setScreen("history")} />;
   if (screen === "practiceagain") return (

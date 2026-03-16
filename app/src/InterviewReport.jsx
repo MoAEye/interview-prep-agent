@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "./supabaseClient";
 
-export default function InterviewReport({ answers, jobTitle, jobId, onRetry, onRetryWeak, onStartOver, onComplete }) {
+export default function InterviewReport({ answers, jobTitle, onRetry, onRetryWeak, onStartOver, onComplete }) {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,15 +24,13 @@ export default function InterviewReport({ answers, jobTitle, jobId, onRetry, onR
       const score = Math.max(0, Math.min(100, Number.isFinite(Number(gradeData?.overall_score)) ? Math.round(Number(gradeData.overall_score)) : 0));
       const stars = Math.max(0, Math.min(5, Number.isFinite(Number(gradeData?.star_rating)) ? Number(gradeData.star_rating) : 0));
 
-      const insertRow = {
+      const { error } = await supabase.from("interview_sessions").insert({
         user_id: session.user.id,
         score,
         stars,
         job_title: jobTitle || gradeData.job_title || "Interview",
         answers: answersData,
-      };
-      if (jobId) insertRow.job_id = jobId;
-      const { error } = await supabase.from("interview_sessions").insert(insertRow);
+      });
 
       if (error) {
         console.error("❌ Failed to save session:", error);
@@ -132,7 +130,7 @@ export default function InterviewReport({ answers, jobTitle, jobId, onRetry, onR
         <div class="aria-label">🎙️ Aria's Feedback</div>
         <p class="aria-text">${report.summary}</p>
       </div>
-      <div class="brand">InterviewAI • interview-prep-agent-lac.vercel.app</div>
+      <div class="brand">InterviewAI</div>
     </div></div></body></html>`;
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
@@ -252,7 +250,6 @@ export default function InterviewReport({ answers, jobTitle, jobId, onRetry, onR
           <div style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>🏆</div>
           <h1 style={{ fontSize: "2rem", fontWeight: "900", color: "#1e3a5f", marginBottom: "0.5rem" }}>Interview Report</h1>
           <p style={{ color: "#888" }}>Here's how you did{jobTitle ? ` — ${jobTitle}` : ""}</p>
-          {jobId && <p style={{ fontSize: "0.85rem", color: "#6c63ff", marginTop: "0.5rem" }}>✓ Linked to your job — see attempts in Job Tracker</p>}
         </div>
 
         <div id="report-card" className="report-card" style={{ background: "white", borderRadius: "24px", padding: "2rem", textAlign: "center", boxShadow: "0 8px 40px rgba(108,99,255,0.1)", marginBottom: "1.5rem" }}>

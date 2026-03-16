@@ -66,7 +66,7 @@ export default function InterviewHistory({ onBack, onShowDashboard }) {
             <button onClick={onBack} style={{ background: "linear-gradient(135deg, #6c63ff, #4ecdc4)", color: "white", border: "none", borderRadius: "12px", padding: "0.85rem 2rem", fontWeight: "800", cursor: "pointer", fontSize: "1rem" }}>🚀 Start an Interview</button>
           </div>
         )}
-        {(Array.isArray(sessions) ? sessions : []).map((s, i) => {
+        {sessions.map((s, i) => {
           const colors = scoreColor(s.score || 0);
           const isOpen = activeSession === i;
           const answers = Array.isArray(s.answers) ? s.answers : [];

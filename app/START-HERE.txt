@@ -1,0 +1,37 @@
+YOU ONLY NEED TO DO ONE THING YOURSELF
+========================================
+
+The app needs 3 "secret codes" to talk to your Supabase and OpenAI.
+You paste them into one file. That's it.
+
+STEP 1 — Open the file
+----------------------
+• In Cursor, look at the left side (the folder list).
+• Click the folder called "app".
+• Click the file called ".env.local" (it might be at the top or you may need to scroll).
+
+STEP 2 — Replace the 3 fake values
+----------------------------------
+You'll see 3 lines that look like placeholders. Replace each with your real value:
+
+• Line 2 — VITE_SUPABASE_URL
+  Replace "https://your-project-id.supabase.co"
+  with your real Supabase "Project URL" (from Supabase → Settings → API).
+
+• Line 3 — VITE_SUPABASE_ANON_KEY
+  Replace "your-anon-key-here"
+  with your Supabase Publishable key (the one we said was safe for the browser).
+
+• Line 6 — OPENAI_API_KEY
+  Replace "sk-your-openai-key-here"
+  with your OpenAI key from platform.openai.com (API keys section).
+
+STEP 3 — Save
+-------------
+Press Cmd+S (Mac) or Ctrl+S (Windows) to save.
+
+STEP 4 — Tell me "done"
+-----------------------
+Reply "done" and I'll run the command to start the app for you. Then you just open your browser to the link I give you.
+
+That's all you have to do. No terminal, no typing commands — just paste 3 things into that one file and save.
