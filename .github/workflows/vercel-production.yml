@@ -1,0 +1,38 @@
+# Deploy to Vercel on every push to `main`.
+# Add these GitHub repo secrets (Vercel → Project → Settings → General → scroll to "Project ID" / Team ID,
+# or run `npx vercel link` locally and read `.vercel/project.json`):
+#   VERCEL_TOKEN      — https://vercel.com/account/tokens
+#   VERCEL_ORG_ID
+#   VERCEL_PROJECT_ID
+#
+# Also set Production env vars in Vercel: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY,
+# SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY (and any other VITE_* / server keys you use).
+
+name: Vercel Production Deploy
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel env
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy prebuilt
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
