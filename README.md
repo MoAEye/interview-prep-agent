@@ -59,13 +59,36 @@ git push -u origin main
 
 ```bash
 npm install
-npm run dev
 ```
 
-The frontend runs (e.g. `http://localhost:5173`). The app expects `/api/generate-questions` and `/api/grade-interview` to be available:
+#### Default: same as before — Vercel dev (UI + `/api` on one URL)
 
-- **Option A – Vercel:** `npx vercel dev` so the `api/` serverless functions run locally with your env.
-- **Option B – Custom server:** Run your own server that serves the Vite build and proxies to the same API logic, and set `OPENAI_API_KEY` in that server’s environment.
+**`npm run dev`** and **`npm run start`** are the same: they run **`vercel dev`** (via `run-with-env.js`, which loads `.env.local`). That’s what was working before.
+
+1. **Remove a bad token from env:** open `.env.local` and delete any line `VERCEL_TOKEN=...` (expired tokens cause *“The specified token is not valid”*).  
+   The runner ignores `VERCEL_TOKEN` for that session, but deleting it avoids confusion.
+2. **Log in once:** `npx vercel login` (browser flow).
+3. **Link the folder once** (if `vercel dev` asks): `npx vercel link` — pick your Vercel account and a project. Deploying is optional; linking is enough for local dev.
+4. **Start:** `npm run dev` **or** `npm run start`  
+5. Open the URL the CLI prints (often **`http://localhost:3000`**). Use that base for **recruiter** and **`/r/…` share links** so `/api` matches the same host.
+
+Ensure `.env.local` has **`OPENAI_API_KEY`**, **`VITE_SUPABASE_*`**, and **`SUPABASE_SERVICE_ROLE_KEY`** where recruiter APIs need them.
+
+#### Alternative: no Vercel login
+
+```bash
+npm run dev:local
+```
+
+Same as **`npm run dev:vite`**: one command starts **local API on :8787** + **Vite on :5173** (`concurrently`, with `DEV_API_PROXY_TARGET` set). Or two terminals: `npm run api:local` + `npm run dev:ui-only` (then set **`DEV_API_PROXY_TARGET=http://127.0.0.1:8787`** in `.env.local` so the proxy works).
+
+#### Port 5173 without Vercel
+
+**`npm run dev:vite`** — **UI + local `/api`** on **http://localhost:5173** (recommended for “no Vercel” full stack).
+
+**`npm run dev:ui-only`** — Vite only (no `/api`). Use for quick UI tweaks; run **`npm run dev:vite`** for full flows (questions, grading).
+
+**If the UI looks outdated:** `rm -rf dist`, restart, then hard-refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`).
 
 ### 5. Deploy (Vercel)
 

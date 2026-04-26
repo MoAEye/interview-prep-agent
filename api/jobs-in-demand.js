@@ -1,24 +1,6 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
+import { loadEnvLocalSafe } from "./_lib/loadEnvLocalSafe.js";
 
-function loadEnvLocal() {
-  try {
-    const dirs = [path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."), process.cwd()];
-    for (const dir of dirs) {
-      const p = path.join(dir, ".env.local");
-      if (fs.existsSync(p)) {
-        const content = fs.readFileSync(p, "utf8");
-        content.split("\n").forEach((line) => {
-          const m = line.trim().match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-          if (m) process.env[m[1]] = m[2].trim();
-        });
-        return;
-      }
-    }
-  } catch (_) {}
-}
-loadEnvLocal();
+loadEnvLocalSafe();
 
 /**
  * Returns jobs in demand for a location.

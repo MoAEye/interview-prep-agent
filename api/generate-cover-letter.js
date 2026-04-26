@@ -1,25 +1,9 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
 import OpenAI from "openai";
+import { resolveCandidateFromRequest } from "./_lib/candidateAuth.js";
+import { captureApiException } from "./_lib/sentryNode.js";
+import { loadEnvLocalSafe } from "./_lib/loadEnvLocalSafe.js";
 
-function loadEnvLocal() {
-  try {
-    const dirs = [path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."), process.cwd()];
-    for (const dir of dirs) {
-      const p = path.join(dir, ".env.local");
-      if (fs.existsSync(p)) {
-        const content = fs.readFileSync(p, "utf8");
-        content.split("\n").forEach((line) => {
-          const m = line.trim().match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-          if (m) process.env[m[1]] = m[2].trim();
-        });
-        return;
-      }
-    }
-  } catch (_) {}
-}
-loadEnvLocal();
+loadEnvLocalSafe();
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -30,6 +14,12 @@ export default async function handler(req, res) {
   }
   if (!process.env.OPENAI_API_KEY) {
     return res.status(500).json({ error: "OpenAI API key is missing." });
+  }
+  const resolved = await resolveCandidateFromRequest(req);
+  if (resolved.error) return res.status(500).json({ error: resolved.error });
+  if (resolved.badToken) return res.status(401).json({ error: "Sign in required." });
+  if (!resolved.authed || !resolved.isPro) {
+    return res.status(403).json({ error: "Cover letters are a Pro feature.", code: "PRO_REQUIRED" });
   }
   try {
     const body = req.body || {};
@@ -56,6 +46,7 @@ export default async function handler(req, res) {
     const coverLetter = completion?.choices?.[0]?.message?.content?.trim() || "";
     return res.status(200).json({ cover_letter: coverLetter });
   } catch (err) {
+    captureApiException(err, { route: "generate-cover-letter" });
     const msg = err?.message || "";
     let userMsg = "Failed to generate cover letter.";
     if (msg.includes("401") || msg.includes("Incorrect API key")) userMsg = "Invalid OpenAI API key.";

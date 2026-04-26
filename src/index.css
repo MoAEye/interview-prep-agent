@@ -6,7 +6,149 @@ html, body, #root {
   padding: 0;
 }
 
+/* Let portal routes (e.g. Aria Live) use flex-1 to fill below the nav */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Candidate portal — input focus (spec) */
+.candidate-input:focus,
+.candidate-input:focus-visible {
+  outline: none;
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.candidate-input::placeholder {
+  color: #9ca3af;
+}
+
+.candidate-card-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.candidate-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.12);
+}
+
+@keyframes candidate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.candidate-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: candidate-spin 0.8s linear infinite;
+}
+
+/* Prepare + interview flow — dark glass shell */
+.prepare-page-shell .candidate-spinner,
+.flow-dark-shell .candidate-spinner {
+  border-color: rgba(139, 92, 246, 0.25);
+  border-top-color: #a78bfa;
+}
+
+.prepare-page-shell .candidate-input,
+.prepare-page-shell select.candidate-input,
+.flow-dark-shell .candidate-input,
+.flow-dark-shell select.candidate-input {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(139, 92, 246, 0.28) !important;
+  color: #f4f4f5 !important;
+}
+
+.prepare-page-shell .candidate-input::placeholder,
+.flow-dark-shell .candidate-input::placeholder {
+  color: #71717a !important;
+}
+
+.prepare-page-shell .candidate-input:focus,
+.prepare-page-shell .candidate-input:focus-visible,
+.flow-dark-shell .candidate-input:focus,
+.flow-dark-shell .candidate-input:focus-visible {
+  border-color: #a78bfa !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.22);
+}
+
+.prepare-page-shell select.candidate-input option,
+.flow-dark-shell select.candidate-input option {
+  background: #18181b;
+  color: #f4f4f5;
+}
+
+.prepare-page-shell .candidate-card-hover:hover,
+.flow-dark-shell .candidate-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 20px 56px rgba(0, 0, 0, 0.5),
+    0 0 48px rgba(124, 58, 237, 0.12);
+}
+
+/* Glow / spotlight card (src/components/ui/spotlight-card.tsx) — global once */
+[data-glow]::before,
+[data-glow]::after {
+  pointer-events: none;
+  content: "";
+  position: absolute;
+  inset: calc(var(--border-size) * -1);
+  border: var(--border-size) solid transparent;
+  border-radius: calc(var(--radius) * 1px);
+  background-attachment: fixed;
+  background-size: calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)));
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  mask: linear-gradient(transparent, transparent), linear-gradient(white, white);
+  mask-clip: padding-box, border-box;
+  mask-composite: intersect;
+}
+
+[data-glow]::before {
+  background-image: radial-gradient(
+    calc(var(--spotlight-size) * 0.75) calc(var(--spotlight-size) * 0.75) at
+    calc(var(--x, 0) * 1px)
+    calc(var(--y, 0) * 1px),
+    hsl(var(--hue, 210) calc(var(--saturation, 100) * 1%) calc(var(--lightness, 50) * 1%) / var(--border-spot-opacity, 1)), transparent 100%
+  );
+  filter: brightness(2);
+}
+
+[data-glow]::after {
+  background-image: radial-gradient(
+    calc(var(--spotlight-size) * 0.5) calc(var(--spotlight-size) * 0.5) at
+    calc(var(--x, 0) * 1px)
+    calc(var(--y, 0) * 1px),
+    hsl(0 100% 100% / var(--border-light-opacity, 1)), transparent 100%
+  );
+}
+
+[data-glow] > [data-glow] {
+  position: absolute;
+  inset: 0;
+  will-change: filter;
+  opacity: var(--outer, 1);
+  border-radius: calc(var(--radius) * 1px);
+  border-width: calc(var(--border-size) * 20);
+  filter: blur(calc(var(--border-size) * 10));
+  background: none;
+  pointer-events: none;
+  border: none;
+}
+
+[data-glow] > [data-glow]::before {
+  inset: -10px;
+  border-width: 10px;
 }
