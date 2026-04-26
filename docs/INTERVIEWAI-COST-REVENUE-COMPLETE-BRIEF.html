@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>InterviewAI / Aria — Cost, revenue &amp; profit (complete briefing)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      line-height: 1.45;
+      color: #111;
+      max-width: 48rem;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+      font-size: 10.5pt;
+    }
+    h1 { font-size: 1.35rem; border-bottom: 2px solid #4f46e5; padding-bottom: 0.35em; }
+    h2 { font-size: 1.05rem; margin-top: 1.4rem; color: #1e1b4b; }
+    h3 { font-size: 0.95rem; margin-top: 1rem; color: #312e81; }
+    p, li { margin: 0.4em 0; }
+    ul { padding-left: 1.2em; }
+    .meta { background: #f4f4f5; border-left: 4px solid #7c3aed; padding: 0.75em 1em; margin: 1em 0; font-size: 0.9em; }
+    .print-hint {
+      background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; padding: 0.6em 0.8em; border-radius: 8px; margin-bottom: 1.2em; font-size: 0.95em;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 0.6em 0 1em; font-size: 0.88em; }
+    th, td { border: 1px solid #d4d4d8; padding: 0.4em 0.5em; text-align: left; vertical-align: top; }
+    th { background: #f4f4f5; }
+    .small { font-size: 0.85em; color: #52525b; }
+    a { color: #4f46e5; }
+    @media print {
+      .print-hint, .no-print { display: none; }
+      body { padding: 0; font-size: 9.5pt; }
+      h2 { page-break-after: avoid; }
+      tr { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-hint no-print">
+    <strong>Save as PDF:</strong> In Chrome or Safari, press <strong>Cmd+P</strong> → choose <strong>Save as PDF</strong> (or Microsoft Print to PDF on Windows). This file is a printable copy of the same briefing as the <code>.md</code> source.
+  </div>
+
+  <h1>InterviewAI / Aria — Cost, revenue &amp; profit (complete briefing)</h1>
+  <div class="meta">
+    <strong>Document for:</strong> co-founder, advisor, or investor<br />
+    <strong>Version:</strong> 1.0 · <strong>Date:</strong> 9 April 2026<br />
+    <strong>Currency:</strong> £ GBP (OpenAI and some vendors bill in USD; planning often uses <strong>£1 = $1.25</strong> unless stated)
+  </div>
+
+  <h2>Executive summary</h2>
+  <ul>
+    <li><strong>Product:</strong> AI interview preparation — mocks (CV + job description), grading, Aria Live (voice + coach), CV tools, academy, etc.</li>
+    <li><strong>Stack cost:</strong> Vercel (app + API), Supabase (auth + database), OpenAI (LLM + TTS). Stripe when card payments are live.</li>
+    <li><strong>Largest variable cost at scale:</strong> OpenAI — especially long Aria Live. A standard mock (questions + grade) is cheap per completion (order of pennies of AI in this model).</li>
+    <li><strong>Revenue (as in the app):</strong> Pro <strong>£12/month</strong> or <strong>£99/year</strong>; Free tier: <strong>3 mock interviews per month (UTC)</strong>. Card checkout: wire Stripe; Pro can be toggled in Supabase (<code>user_profiles.is_pro</code>) for tests.</li>
+    <li><strong>Profit per Pro (contribution, after variable costs + card fees):</strong> often <strong>~£7–10+/month</strong> for a <em>typical</em> user; <strong>~£0–3</strong> for a <em>heavy</em> Aria user; can be <em>loss-making</em> if someone abuses unlimited — use fair use or Pro+ for flagship live voice.</li>
+    <li class="small">This is a <strong>planning model</strong>, not a tax quote. Replace numbers with real OpenAI, Vercel, Supabase, and Stripe data.</li>
+  </ul>
+
+  <h2>1. What customers pay (product copy in the app)</h2>
+  <table>
+    <thead>
+      <tr><th>Tier</th><th>Price</th><th>Headline offer</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Free</strong></td>
+        <td>£0</td>
+        <td><strong>3</strong> mock interviews <strong>per month (UTC)</strong>; <strong>5</strong> questions max; last <strong>3</strong> sessions; basic tracker; other limits per app.</td>
+      </tr>
+      <tr>
+        <td><strong>Pro</strong></td>
+        <td><strong>£12/mo</strong> or <strong>£99/yr</strong> (~<strong>£8.25/mo</strong> if spread over 12 months)</td>
+        <td>“Unlimited” mocks; <strong>10</strong> questions; full grading, PDF, cover letter, company research, Academy, CV tools, read-aloud, full history, etc.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="small"><strong>When live:</strong> Stripe (or similar) — typically a % + small fixed fee on UK card payments. That comes out of <em>gross</em> revenue.</p>
+
+  <h2>2. Full cost breakdown — what you pay to run the program</h2>
+  <h3>2.1 Fixed and semi-fixed (per month) — before per-interview traffic</h3>
+  <table>
+    <thead>
+      <tr><th>Line</th><th>Vendor</th><th>What it is</th><th>~£/month</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><strong>Vercel</strong></td><td>Site + serverless API</td><td>~£12–20 base; +£40–200+ at higher traffic</td></tr>
+      <tr><td>2</td><td><strong>Supabase</strong></td><td>Auth, DB, RLS</td><td>£0 (dev) / ~£20+ Pro org; more at scale</td></tr>
+      <tr><td>3</td><td><strong>Domain</strong></td><td>DNS</td><td>~£1 effective/mo (annual/12)</td></tr>
+      <tr><td>4</td><td>Email, Sentry</td><td>Optional</td><td>£0–small, grows with use</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Early serious production (planning):</strong> ~<strong>£30–80/month</strong> in platform before AI variable dominates.</p>
+
+  <h3>2.2 Variable — OpenAI (main driver)</h3>
+  <table>
+    <thead>
+      <tr><th>Area</th><th>Cost shape (planning)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Each full <strong>mock</strong> (q + grade, mini model)</td><td>~<strong>1p to 2½p</strong> of AI</td></tr>
+      <tr><td><strong>Aria Live</strong> (long coach + TTS)</td><td>~<strong>£0.30–1.50+</strong> per <em>long</em> session; short = less</td></tr>
+      <tr><td>Heavier tools (gpt-4o routes)</td><td>More per call</td></tr>
+      <tr><td>Future: realtime / flagship audio interviewer</td><td>Can be <strong>10×–100×+</strong> per minute vs simple mock — separate P&amp;L; price &amp; cap</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Verify models and rates: <a href="https://openai.com/api-pricing">openai.com/api-pricing</a></p>
+
+  <h3>2.3 Company “all-in” run cost (global; infra + API, no payroll)</h3>
+  <table>
+    <thead>
+      <tr><th>Scenario</th><th>Picture</th><th>~All-in / month</th><th>~AI-heavy / year (indicative)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>A – steady</strong></td><td>~30k full mocks/mo; 5% with long Aria</td><td>~<strong>£2,300–2,500</strong></td><td>~<strong>£25,000</strong></td></tr>
+      <tr><td><strong>B – high growth</strong></td><td>~200k mocks/mo; 25% heavy Aria</td><td>~<strong>£54,000–58,000</strong></td><td>~<strong>£640,000</strong></td></tr>
+      <tr><td><strong>C – stress (ceiling)</strong></td><td>very high; many maxing coach+voice</td><td>~<strong>£200k–250k+</strong></td><td>~<strong>£2.3M–2.9M+</strong> (AI)</td></tr>
+    </tbody>
+  </table>
+  <p class="small">C is a <em>ceiling</em> for planning — use fair use and pricing on expensive modes.</p>
+
+  <h3>2.4 Text rate card (planning, £ per 1M text tokens, $1.25 = £1)</h3>
+  <table>
+    <thead>
+      <tr><th>Item</th><th>~£/1M in</th><th>~£/1M out</th><th>Typical use</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>gpt-4o-mini</td><td>~0.12</td><td>~0.48</td><td>Mocks, grading (volume)</td></tr>
+      <tr><td>gpt-4o</td><td>~2.00</td><td>~8.00</td><td>Some coach, CV, research</td></tr>
+      <tr><td>TTS</td><td colspan="2">per char/model (not per 1M tokens like chat)</td><td>Aria voice</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Per-user economics (Pro)</h2>
+  <h3>3.1 Cost to serve one Pro user / month (variable, £, planning)</h3>
+  <table>
+    <thead>
+      <tr><th>User type</th><th>What they do</th><th>~AI+infra / user / month</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Light</td><td>2–3 mocks; little Aria</td><td>~<strong>£0.20–0.50</strong></td></tr>
+      <tr><td>Typical</td><td>5–8 mocks + 1 short Aria</td><td>~<strong>£1.00–3.00</strong></td></tr>
+      <tr><td>Heavy</td><td>many mocks + long daily Aria + TTS</td><td>~<strong>£5–20+</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.2 Net after Stripe on £12 (illustrative)</h3>
+  <p><strong>Gross</strong> £12 → <strong>fees</strong> (often ~2.5% + 20p on many UK cards) order of <strong>~40p</strong> → <strong>net ≈ £11.20–11.60</strong> (round <strong>£11.30</strong> below; confirm in Stripe).</p>
+
+  <h3>3.3 Profit per Pro (contribution) after Stripe, before salary/ads</h3>
+  <table>
+    <thead>
+      <tr><th>User type</th><th>Illust. net after fees</th><th>Illust. variable £</th><th>~Contribution / month</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Light</td><td>£11.30</td><td>£0.35</td><td>~<strong>£10.95</strong></td></tr>
+      <tr><td>Typical</td><td>£11.30</td><td>£2.00</td><td>~<strong>£9.30</strong></td></tr>
+      <tr><td>Heavy</td><td>£11.30</td><td>£8.00</td><td>~<strong>£3.30</strong></td></tr>
+      <tr><td>Abusive (cost &gt; price)</td><td>£11.30</td><td>&gt;£12</td><td><strong>Loss</strong> on that user</td></tr>
+    </tbody>
+  </table>
+  <p class="small"><strong>£99/year:</strong> after fees, effective revenue ~£7.9–8.1/mo; heavy year-long use on unlimited voice can still crush margin — same fair use as monthly.</p>
+  <p><strong>Target:</strong> &gt;50–60% contribution on Pro (after fees + variable) before opex. If &lt;40% for months, raise price, cap Aria, or add Pro+.</p>
+
+  <h2>4. Future: “real” live interviewer</h2>
+  <p>Today: HTTP coach + TTS; not full flagship speech-to-speech. Realtime / long audio = separate P&amp;L — <strong>price, minute bundles, or Pro+</strong>. See <code>docs/INVESTOR-COST-REAL-INTERVIEWER-MODE.md</code> in the repo for detail.</p>
+
+  <h2>5. Commercial levers</h2>
+  <ol>
+    <li>Fair use / soft caps on TTS or long Aria for Pro if needed.</li>
+    <li>Pro+ for unlimited or realtime “hiring manager” mode.</li>
+    <li>B2B for higher £/seat later.</li>
+    <li>Track weekly: OpenAI spend; £ or $ per active Pro; Aria minutes or TTS volume per Pro.</li>
+  </ol>
+
+  <h2>6. Metrics checklist</h2>
+  <ul>
+    <li>MRR, active Pro, churn</li>
+    <li>OpenAI bill (total and per active user)</li>
+    <li>Mocks per user; Aria minutes or TTS per Pro</li>
+    <li>Gross vs net after Stripe</li>
+  </ul>
+
+  <h2>7. Disclaimer</h2>
+  <p class="small">Illustrative planning only. Not a vendor quote, not tax/legal/investment advice. Reconcile with real invoices. Aligns with <code>UpgradeModal.jsx</code> (£12/£99), <code>candidateAuth.js</code> (3 free mocks/mo, Pro limits), <code>pricingFeatures.js</code>.</p>
+
+  <p class="small" style="margin-top:2rem;">— End of briefing —</p>
+</body>
+</html>
